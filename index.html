@@ -1,71 +1,266 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dejdarovi.cz</title>
+  <title>Catch the Cats!</title>
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #f7f7f2;
-      color: #222;
-      display: grid;
-      place-items: center;
-      min-height: 100vh;
+    :root {
+      --ink: #2b1708;
+      --card: rgba(255, 255, 255, 0.82);
+      --shadow: rgba(43, 23, 8, 0.18);
     }
 
-    main {
-      max-width: 720px;
-      padding: 48px 24px;
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255,255,255,.95), transparent 28%),
+        linear-gradient(#fff8ec 0 52%, #d9aa6d 52% 100%);
+      user-select: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 52%;
+      height: 2px;
+      background: rgba(255,255,255,.8);
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 2;
+      padding: 18px;
       text-align: center;
+      pointer-events: none;
     }
 
     h1 {
-      font-size: clamp(42px, 8vw, 84px);
-      margin-bottom: 16px;
+      margin: 0 0 16px;
+      font-size: clamp(34px, 5vw, 68px);
+      letter-spacing: .03em;
+      text-shadow: 0 3px 0 rgba(255,255,255,.85);
     }
 
-    p {
-      font-size: 20px;
-      line-height: 1.6;
-    }
-
-    .links {
-      margin-top: 32px;
+    .hud {
       display: flex;
-      gap: 16px;
       justify-content: center;
+      gap: clamp(12px, 8vw, 180px);
       flex-wrap: wrap;
     }
 
-    a {
-      color: #222;
-      text-decoration: none;
-      border: 1px solid #222;
-      border-radius: 999px;
-      padding: 10px 18px;
+    .card {
+      min-width: 190px;
+      padding: 14px 28px;
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: 0 7px 20px var(--shadow);
+      backdrop-filter: blur(8px);
     }
 
-    a:hover {
-      background: #222;
-      color: #fff;
+    .label { font-size: 18px; font-weight: 700; }
+    .value { font-size: 46px; font-weight: 900; line-height: 1.05; }
+
+    .hint, .final {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 20px;
+      background: var(--card);
+      border-radius: 999px;
+      box-shadow: 0 6px 18px var(--shadow);
+      font-weight: 700;
     }
+
+    .cat {
+      position: absolute;
+      z-index: 4;
+      width: clamp(120px, 17vw, 235px);
+      height: auto;
+      cursor: pointer;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.25)) drop-shadow(0 0 2px white);
+      transition: transform .12s ease;
+      -webkit-user-drag: none;
+    }
+
+    .cat:hover { transform: scale(1.06) rotate(var(--tilt)); }
+    .cat:active { transform: scale(.92); }
+
+    .pop {
+      position: absolute;
+      z-index: 5;
+      font-size: 30px;
+      font-weight: 900;
+      pointer-events: none;
+      animation: floatUp .7s ease-out forwards;
+      text-shadow: 0 2px 0 white;
+    }
+
+    @keyframes floatUp {
+      from { transform: translateY(0) scale(.9); opacity: 1; }
+      to { transform: translateY(-58px) scale(1.25); opacity: 0; }
+    }
+
+    button {
+      pointer-events: auto;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 24px;
+      background: var(--ink);
+      color: white;
+      font-weight: 900;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px var(--shadow);
+    }
+
+    .plant, .tree {
+      position: fixed;
+      z-index: 1;
+      bottom: 42%;
+      font-size: clamp(70px, 12vw, 150px);
+      opacity: .85;
+      pointer-events: none;
+    }
+    .plant { left: 22px; }
+    .tree { right: 24px; }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Dejdarovi.cz</h1>
-    <p>
-      Vítejte na rodinné doméně Dejdarových.
-      Zatím tu připravujeme nový web.
-    </p>
+  <div class="plant">🪴</div>
+  <div class="tree">🐾</div>
 
-    <div class="links">
-      <a href="mailto:dejdar.honza@gmail.com">Kontakt</a>
-      <a href="https://www.linkedin.com/in/jan-dejdar-3966838a/">LinkedIn</a>
-      <a href="https://github.com/dejdy">GitHub</a>
-    </div>
+  <main class="wrap">
+    <h1>🐾 Catch the Cats! 🐾</h1>
+    <section class="hud">
+      <div class="card"><div class="label">🏆 Score</div><div class="value" id="score">0</div></div>
+      <div class="card"><div class="label">⏱ Time Left</div><div class="value"><span id="time">30</span>s</div></div>
+      <div class="card"><div class="label">📊 High Score</div><div class="value" id="high">0</div></div>
+    </section>
+    <div class="hint" id="hint">Click the cats to score!</div><br />
+    <button id="start">Start game</button>
   </main>
+
+  <script>
+    const catImages = ["cats/grey-cat.png", "cats/silver-cat.png"];
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const highEl = document.getElementById("high");
+    const startBtn = document.getElementById("start");
+    const hint = document.getElementById("hint");
+
+    let score = 0;
+    let timeLeft = 30;
+    let running = false;
+    let spawnTimer;
+    let countdownTimer;
+    let highScore = Number(localStorage.getItem("catHighScore") || 0);
+    highEl.textContent = highScore;
+
+    function meow() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.24);
+    }
+
+    function showPop(x, y) {
+      const pop = document.createElement("div");
+      pop.className = "pop";
+      pop.textContent = "+1 🐟";
+      pop.style.left = x + "px";
+      pop.style.top = y + "px";
+      document.body.appendChild(pop);
+      setTimeout(() => pop.remove(), 750);
+    }
+
+    function spawnCat() {
+      if (!running) return;
+      const cat = document.createElement("img");
+      cat.className = "cat";
+      cat.src = catImages[Math.floor(Math.random() * catImages.length)];
+      cat.alt = "A fluffy cat";
+      cat.style.setProperty("--tilt", (Math.random() * 14 - 7) + "deg");
+
+      const size = Math.min(Math.max(window.innerWidth * 0.17, 120), 235);
+      const x = Math.random() * Math.max(1, window.innerWidth - size - 24) + 12;
+      const y = Math.random() * Math.max(1, window.innerHeight - size - 150) + 130;
+      cat.style.left = x + "px";
+      cat.style.top = y + "px";
+
+      cat.addEventListener("click", () => {
+        score += 1;
+        scoreEl.textContent = score;
+        showPop(x + size / 2, y);
+        meow();
+        cat.remove();
+      });
+
+      document.body.appendChild(cat);
+      setTimeout(() => cat.remove(), Math.max(650, 1600 - score * 25));
+    }
+
+    function startGame() {
+      document.querySelectorAll(".cat,.pop").forEach(el => el.remove());
+      score = 0;
+      timeLeft = 30;
+      running = true;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      startBtn.style.display = "none";
+      hint.textContent = "Get points! More cats appear as time goes on!";
+
+      spawnTimer = setInterval(() => {
+        spawnCat();
+        if (score > 8 && Math.random() > 0.45) spawnCat();
+        if (score > 18 && Math.random() > 0.65) spawnCat();
+      }, 700);
+
+      countdownTimer = setInterval(() => {
+        timeLeft -= 1;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+    }
+
+    function endGame() {
+      running = false;
+      clearInterval(spawnTimer);
+      clearInterval(countdownTimer);
+      document.querySelectorAll(".cat").forEach(el => el.remove());
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("catHighScore", highScore);
+        highEl.textContent = highScore;
+        hint.textContent = `New high score: ${score}! 🐾`;
+      } else {
+        hint.textContent = `Game over! Score: ${score}.`;
+      }
+      startBtn.textContent = "Play again";
+      startBtn.style.display = "inline-block";
+    }
+
+    startBtn.addEventListener("click", startGame);
+  </script>
 </body>
 </html>
